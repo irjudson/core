@@ -1,19 +1,17 @@
 var assert = require('assert')
-  , config = require('../../config')
-  , fixtures = require('../fixtures')
-  , models = require('../../models')
-  , services = require('../../services');
+  , core = require('../../lib')
+  , fixtures = require('../fixtures');
 
 describe('apiKeys service', function() {
     it('can create, check, and remove apiKeys', function(done) {
-        var apiKey = new models.ApiKey({
+        var apiKey = new core.models.ApiKey({
             owner: fixtures.models.principals.anotherUser,
             name: 'my app',
             type: 'app',
             redirect_uri: "http://localhost:9000/"
         });
 
-        services.apiKeys.create(services.principals.servicePrincipal, apiKey, function(err, apiKey) {
+        core.services.apiKeys.create(core.services.principals.servicePrincipal, apiKey, function(err, apiKey) {
             assert(!err);
 
             assert(apiKey.key);
@@ -21,17 +19,17 @@ describe('apiKeys service', function() {
 
             assert(apiKey.id);
 
-            services.apiKeys.check(apiKey.key, apiKey.redirect_uri + "/suffix", function(err, checkApiKey) {
+            core.services.apiKeys.check(apiKey.key, apiKey.redirect_uri + "/suffix", function(err, checkApiKey) {
                 assert(!err);
 
                 assert(checkApiKey);
                 assert(checkApiKey.id === apiKey.id);
 
-                services.apiKeys.check(apiKey.key, "http://roguesite.com", function(err, checkApiKey) {
+                core.services.apiKeys.check(apiKey.key, "http://roguesite.com", function(err, checkApiKey) {
                     assert(err);
                     assert(!checkApiKey);
 
-                    services.apiKeys.remove({ _id: apiKey.id }, function(err, removed) {
+                    core.services.apiKeys.remove({ _id: apiKey.id }, function(err, removed) {
                         assert(!err);
                         assert.equal(removed, 1);
                         done();

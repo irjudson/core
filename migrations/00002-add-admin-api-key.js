@@ -1,20 +1,18 @@
 var async = require('async')
-  , config = require('../config')
-  , models = require('../models')
-  , services = require('../services');
+  , core = require('../lib');
 
 exports.up = function(callback) {
-    var adminApiKey = models.ApiKey({
+    var adminApiKey = core.models.ApiKey({
         capabilities: ['impersonate'],
         enabled : true,
         key: "admin",
         name : "Web Admin",
-        redirect_uri: config.web_admin_uri,
+        redirect_uri: core.config.web_admin_uri,
         type: "app",
-        owner : services.principals.servicePrincipal
+        owner : core.services.principals.servicePrincipal
     });
 
-    services.apiKeys.create(services.principals.servicePrincipal, adminApiKey, callback);
+    core.services.apiKeys.create(core.services.principals.servicePrincipal, adminApiKey, callback);
 };
 
 // exports.down = function(callback) {

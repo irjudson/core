@@ -1,16 +1,16 @@
 var assert = require('assert')
-  , services = require('../../services');
+  , core = require('../../lib');
 
 describe('global service', function() {
     it('can run migrations', function(done) {
-        services.global.migrate(function(err) {
+        core.services.global.migrate(function(err) {
             assert.ifError(err);
             done();
         });
     });
 
     it('can run janitor iteration', function(done) {
-        services.global.janitor(function(err) {
+        core.services.global.janitor(function(err) {
             assert.ifError(err);
             done();
         });

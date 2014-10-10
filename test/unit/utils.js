@@ -1,5 +1,5 @@
 var assert = require('assert')
-  , utils = require('../../utils');
+  , core = require('../../lib');
 
 describe('utils', function() {
 
@@ -9,7 +9,7 @@ describe('utils', function() {
             shouldBeDate: "2013-05-06T18:27:33.053Z"
         };
 
-        var translatedObject = utils.translateQuery(testObject, { dateFields: ['shouldBeDate'] });
+        var translatedObject = core.utils.translateQuery(testObject, { dateFields: ['shouldBeDate'] });
 
         assert.equal(typeof translatedObject.shouldBeString, "string");
         assert.equal(typeof translatedObject.shouldBeDate, "object");
@@ -21,7 +21,7 @@ describe('utils', function() {
             }
         };
 
-        var hierarchyObject = utils.translateQuery(testObjectWithHierarchy, { dateFields: ['shouldBeDate'] });
+        var hierarchyObject = core.utils.translateQuery(testObjectWithHierarchy, { dateFields: ['shouldBeDate'] });
 
         assert.equal(typeof hierarchyObject.hasADate.justAString, "string");
         assert.equal(typeof hierarchyObject.hasADate.shouldBeDate, "object");

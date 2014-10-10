@@ -1,17 +1,15 @@
 var assert = require('assert')
-  , config = require('../../config')
-  , fixtures = require('../fixtures')
-  , models = require('../../models')
-  , services = require('../../services');
+  , core = require('../../lib')
+  , fixtures = require('../fixtures');
 
 describe('authCodes service', function() {
     it('can create, check, and remove authCodes', function(done) {
-        var authCode = new models.AuthCode({
+        var authCode = new core.models.AuthCode({
             user: fixtures.models.principals.anotherUser.id,
             redirect_uri: "http://localhost:9000/"
         });
 
-        services.authCodes.create(authCode, function(err, authCode) {
+        core.services.authCodes.create(authCode, function(err, authCode) {
             assert(!err);
 
             assert(authCode.code);
@@ -19,17 +17,17 @@ describe('authCodes service', function() {
 
             assert(authCode.id);
 
-            services.authCodes.check(authCode.code, fixtures.models.principals.anotherUser, function(err, checkAuthCode) {
+            core.services.authCodes.check(authCode.code, fixtures.models.principals.anotherUser, function(err, checkAuthCode) {
                 assert(!err);
 
                 assert(checkAuthCode);
                 assert(checkAuthCode.id === authCode.id);
 
-                services.authCodes.check(authCode.code, fixtures.models.principals.user, function(err, checkAuthCode) {
+                core.services.authCodes.check(authCode.code, fixtures.models.principals.user, function(err, checkAuthCode) {
                     assert(err);
                     assert(!checkAuthCode);
 
-                    services.authCodes.remove({ code: authCode.code }, function(err, removed) {
+                    core.services.authCodes.remove({ code: authCode.code }, function(err, removed) {
                         assert(!err);
                         assert.equal(removed, 1);
                         done();

@@ -1,18 +1,45 @@
-var assert = require('assert') 
-  , config = require('../config')
+var assert = require('assert')
+  , async = require('async')
+  , config = require('./config')
   , fixtures = require('./fixtures')
-  , log = require('../log')
-  , services = require('../services');
+  , log = require('winston')
+  , core = require('../lib')
+  , mongoose = require('mongoose');
+
+core.config = config;
+core.log = log;
+
+var removeAll = function (modelType, callback) {
+    modelType.remove({}, callback);
+};
 
 before(function(done) {
-    config.pubsub_provider.resetForTest(function(err) {
-        assert.ifError(err);
+    mongoose.connect(config.mongodb_connection_string);
+    mongoose.connection.once('open', function () {
+        log.debug('mongo connected');
 
-        fixtures.reset(function(err) {
-            assert.ifError(err); 
+        var modelTypes = Object.keys(core.models).map(function(key) { return core.models[key]; });
 
-            log.debug("FIXTURES: creation finished...");
-            done();
+        async.each(modelTypes, removeAll, function(err) {
+            assert(!err);
+            log.debug('cleared modules');
+
+            core.services.initialize(function(err) {
+                assert(!err);
+                log.debug('services initialized');
+
+                config.pubsub_provider.resetForTest(function(err) {
+                    assert(!err);
+                    log.debug('pubsub reset');
+
+                    fixtures.reset(function(err) {
+                        assert(!err);
+                        log.debug('fixtures put in place');
+
+                        done();
+                    });
+                });
+            });
         });
     });
 });

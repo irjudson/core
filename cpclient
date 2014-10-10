@@ -1,2 +1,0 @@
-cp ../client/lib/* node_modules/nitrogen/lib
-cp ../client/browser/* node_modules/nitrogen/browser

@@ -1,33 +1,25 @@
 var async = require('async')
   , assert = require('assert')
-  , config = require('../../config')
   , fs = require('fs')
-  , log = require('../../log')
-  , models = require('../../models')
-  , services = require('../../services')
-  , ursa = require('ursa');
+  , core = require('../../lib');
 
 var fixtures = {};
 
-var removeAll = function (modelType, callback) {
-    modelType.remove({}, callback);
-};
-
 var createApiKeyFixtures = function(callback) {
-    var adminKey = new models.ApiKey({
+    var adminKey = new core.models.ApiKey({
         name: 'Admin',
         type: 'app',
         capabilities: ['impersonate'],
         redirect_uri: 'http://localhost:9000/',
-        owner: services.principals.servicePrincipal.id
+        owner: core.services.principals.servicePrincipal.id
     });
 
-    services.apiKeys.create(services.principals.servicePrincipal, adminKey, function(err, adminKey) {
+    core.services.apiKeys.create(core.services.principals.servicePrincipal, adminKey, function(err, adminKey) {
         if (err) throw err;
 
         fixtures.apiKeys.admin = adminKey;
 
-        var regularAppKey = new models.ApiKey({
+        var regularAppKey = new core.models.ApiKey({
             name: 'Regular App',
             type: 'app',
             capabilities: [],
@@ -35,7 +27,7 @@ var createApiKeyFixtures = function(callback) {
             owner: fixtures.principals.anotherUser.id
         });
 
-        services.apiKeys.create(services.principals.servicePrincipal, regularAppKey, function(err, regularAppKey) {
+        core.services.apiKeys.create(core.services.principals.servicePrincipal, regularAppKey, function(err, regularAppKey) {
             if (err) throw err;
 
             fixtures.apiKeys.regularApp = regularAppKey;
@@ -46,29 +38,30 @@ var createApiKeyFixtures = function(callback) {
 };
 
 var createAppFixtures = function(callback) {
-    log.debug("creating app fixture");
+    core.log.debug("creating app fixture");
 
-    var keys = ursa.generatePrivateKey(config.public_key_bits, config.public_key_exponent);
-
-    var app = new models.Principal({
+    var app = new core.models.Principal({
         type: 'app',
         api_key: fixtures.apiKeys.regularApp,
-        public_key: keys.toPublicPem().toString('base64')
     });
 
-    services.principals.create(app, function(err, app) {
+    core.services.principals.createSecret(app, function(err, app) {
         if (err) throw err;
 
-        fixtures.principals.app = app;
+        core.services.principals.create(app, function(err, app) {
+            if (err) throw err;
 
-        return callback();
+            fixtures.principals.app = app;
+
+            return callback();
+        });
     });
 };
 
 var createAuthCodeFixtures = function(callback) {
-    log.debug("creating authCode fixture");
+    core.log.debug("creating authCode fixture");
 
-    var authCode = models.AuthCode({
+    var authCode = core.models.AuthCode({
         api_key: fixtures.apiKeys.regularApp,
         app: fixtures.principals.app.id,
         name: fixtures.apiKeys.regularApp.name,
@@ -77,7 +70,7 @@ var createAuthCodeFixtures = function(callback) {
         redirect_uri: fixtures.apiKeys.regularApp.redirect_uri
     });
 
-    services.authCodes.create(authCode, function(err, authCode) {
+    core.services.authCodes.create(authCode, function(err, authCode) {
         fixtures.authCodes.regularApp = authCode;
 
         return callback();
@@ -85,18 +78,18 @@ var createAuthCodeFixtures = function(callback) {
 };
 
 var createSecretAuthDeviceFixtures = function(callback) {
-    var secretAuthDevice = new models.Principal({
+    var secretAuthDevice = new core.models.Principal({
         api_key: fixtures.apiKeys.user,
         type: 'device',
         name: 'secretAuthDevice'
     });
 
-    services.principals.createSecret(secretAuthDevice, function(err, secretAuthDevice) {
+    core.services.principals.createSecret(secretAuthDevice, function(err, secretAuthDevice) {
         if (err) return callback(err);
 
         var secret = secretAuthDevice.secret;
 
-        services.principals.create(secretAuthDevice, function(err, secretAuthDevice) {
+        core.services.principals.create(secretAuthDevice, function(err, secretAuthDevice) {
             if (err) return callback(err);
 
             secretAuthDevice.secret = secret;
@@ -108,120 +101,120 @@ var createSecretAuthDeviceFixtures = function(callback) {
 };
 
 var createDeviceFixtures = function(callback) {
-    log.debug("creating device fixtures");
+    core.log.debug("creating device fixtures");
 
-    var keys = ursa.generatePrivateKey(config.public_key_bits, config.public_key_exponent);
-
-    var device = new models.Principal({
+    var device = new core.models.Principal({
         api_key: fixtures.apiKeys.user,
         type: 'device',
-        name: 'existing device',
-        public_key: keys.toPublicPem().toString('base64')
+        name: 'existing device'
     });
 
-    services.principals.create(device, function(err, device) {
+    core.services.principals.createSecret(device, function(err, device) {
         if (err) throw err;
 
-        var userIsDeviceAdmin = new models.Permission({
-            authorized: true,
-            issued_to: fixtures.principals.user.id,
-            principal_for: device.id,
-            priority: models.Permission.DEFAULT_PRIORITY_BASE
-        });
-
-        services.permissions.create(services.principals.servicePrincipal, userIsDeviceAdmin, function(err) {
+        core.services.principals.create(device, function(err, device) {
             if (err) throw err;
 
-            services.principals.updateLastConnection(device, '127.0.0.1');
+            var userIsDeviceAdmin = new core.models.Permission({
+                authorized: true,
+                issued_to: fixtures.principals.user.id,
+                principal_for: device.id,
+                priority: core.models.Permission.DEFAULT_PRIORITY_BASE
+            });
 
-            device.private_key = keys.toPrivatePem().toString('base64');
-
-            fixtures.principals.device = device;
-
-            services.accessTokens.create(device, function(err, accessToken) {
+            core.services.permissions.create(core.services.principals.servicePrincipal, userIsDeviceAdmin, function(err) {
                 if (err) throw err;
 
-                // make access token expire in 15 minutes to force an accessToken refresh
-                var updates = { expires_at: new Date(new Date().getTime() + (15 * 60000))};
-                models.AccessToken.update({ _id: accessToken.id }, { $set: updates }, function (err, updateCount) {
-                    fixtures.accessTokens.device = accessToken;
-                    log.debug("creating device fixtures: FINISHED: " + updates.expires_at);
-                    callback();
+                core.services.principals.updateLastConnection(device, '127.0.0.1');
+
+                fixtures.principals.device = device;
+
+                core.services.accessTokens.create(device, function(err, accessToken) {
+                    if (err) throw err;
+
+                    // make access token expire in 15 minutes to force an accessToken refresh
+                    var updates = { expires_at: new Date(new Date().getTime() + (15 * 60000))};
+                    core.models.AccessToken.update({ _id: accessToken.id }, { $set: updates }, function (err, updateCount) {
+                        fixtures.accessTokens.device = accessToken;
+                        core.log.debug("creating device fixtures: FINISHED: " + updates.expires_at);
+                        callback();
+                    });
                 });
             });
         });
     });
-
 };
 
 var createServiceUserFixtures = function(callback) {
-    log.debug("creating service user fixtures");
-    services.accessTokens.findOrCreateToken(services.principals.servicePrincipal, function(err, accessToken) {
+    core.log.debug("creating service user fixtures");
+    core.services.accessTokens.findOrCreateToken(core.services.principals.servicePrincipal, function(err, accessToken) {
         if (err) throw err;
 
         fixtures.accessTokens.service = accessToken;
-        log.debug("creating service user fixtures: FINISHED");
+        core.log.debug("creating service user fixtures: FINISHED");
         callback();
     });
 };
 
 var createUserFixtures = function(callback) {
-    log.debug("creating user fixtures");
+    core.log.debug("creating user fixtures");
 
-    var user = new models.Principal({ type: 'user',
-                                      email: 'user@server.org',
-                                      password: 'sEcReT44' });
+    var user = new core.models.Principal({
+        type: 'user',
+        email: 'user@server.org',
+        password: 'sEcReT44'
+    });
 
-    services.principals.create(user, function(err, user) {
+    core.services.principals.create(user, function(err, user) {
         if (err) throw err;
 
         fixtures.principals.user = user;
 
-        services.apiKeys.find({ owner: user.id }, {}, function(err, apiKeys) {
+        core.services.apiKeys.find({ owner: user.id }, {}, function(err, apiKeys) {
             if (err) throw err;
             assert(apiKeys.length > 0);
 
             fixtures.apiKeys.user = apiKeys[0];
         });
 
-        services.accessTokens.create(user, function(err, accessToken) {
+        core.services.accessTokens.create(user, function(err, accessToken) {
             if (err) throw err;
 
             fixtures.accessTokens.user = accessToken;
 
-            var anotherUser = new models.Principal({
+            var anotherUser = new core.models.Principal({
                 type: 'user',
                 email: 'anotheruser@server.org',
                 password: 'sEcReTO66'
             });
 
-            services.principals.create(anotherUser, function(err, user) {
+            core.services.principals.create(anotherUser, function(err, user) {
                 if (err) throw err;
 
                 fixtures.principals.anotherUser = anotherUser;
 
-                services.apiKeys.find({ owner: anotherUser.id }, {}, function(err, apiKeys) {
+                core.services.apiKeys.find({ owner: anotherUser.id }, {}, function(err, apiKeys) {
                     if (err) throw err;
                     fixtures.apiKeys.anotherUser = apiKeys[0];
                 });
 
-                var userCanImpersonateAnotherUser = new models.Permission({
+                var userCanImpersonateAnotherUser = new core.models.Permission({
                     authorized: true,
                     issued_to: fixtures.principals.user.id,
                     principal_for: fixtures.principals.anotherUser.id,
                     action: 'impersonate',
-                    priority: models.Permission.DEFAULT_PRIORITY_BASE
+                    priority: core.models.Permission.DEFAULT_PRIORITY_BASE
                 });
 
-                services.permissions.create(services.principals.servicePrincipal, userCanImpersonateAnotherUser, function(err) {
+                core.services.permissions.create(core.services.principals.servicePrincipal, userCanImpersonateAnotherUser, function(err) {
                     if (err) throw err;
 
-                    services.accessTokens.create(anotherUser, function(err, accessToken) {
+                    core.services.accessTokens.create(anotherUser, function(err, accessToken) {
                         if (err) throw err;
 
                         fixtures.accessTokens.anotherUser = accessToken;
 
-                        log.debug("creating user fixtures: FINISHED");
+                        core.log.debug("creating user fixtures: FINISHED");
                         callback();
                     });
                 });
@@ -231,25 +224,25 @@ var createUserFixtures = function(callback) {
 };
 
 var createBlobFixture = function(callback) {
-    log.debug("creating blob fixtures");
+    core.log.debug("creating blob fixtures");
 
     var fixture_path = 'test/fixtures/images/image.jpg';
 
     fs.stat(fixture_path, function(err, stats) {
         if (err) throw err;
 
-        var blob = new models.Blob({
+        var blob = new core.models.Blob({
             content_type: "image/jpeg",
             content_length: stats.size
         });
 
         var stream = fs.createReadStream(fixture_path);
-        services.blobs.create(fixtures.principals.user, blob, stream, function(err, blob) {
+        core.services.blobs.create(fixtures.principals.user, blob, stream, function(err, blob) {
             if (err) throw err;
 
             fixtures.blobs.removableBlob = blob;
 
-            log.debug("creating blob fixtures: FINISHED");
+            core.log.debug("creating blob fixtures: FINISHED");
 
             callback();
         });
@@ -257,46 +250,39 @@ var createBlobFixture = function(callback) {
 };
 
 var createDeviceIpMessageFixture = function(callback) {
-    log.debug("creating device ip fixtures");
+    core.log.debug("creating device ip fixtures");
 
-    var message = new models.Message({ from: fixtures.principals.device.id,
+    var message = new core.models.Message({ from: fixtures.principals.device.id,
                                        type: "ip",
                                        index_until: new Date(new Date().getTime() + 24 * 60 * 60 + 1000),
                                        body: { ip_address: "127.0.0.1" } });
 
-    services.messages.create(services.principals.servicePrincipal, message, function (err, messages) {
+    core.services.messages.create(core.services.principals.servicePrincipal, message, function (err, messages) {
         if (err) throw err;
 
         fixtures.messages.deviceIp = messages[0];
-        log.debug("creating device ip fixtures: FINISHED");
+        core.log.debug("creating device ip fixtures: FINISHED");
         callback();
     });
 };
 
 exports.reset = function(callback) {
+    var fixtureFactories = [
+        createUserFixtures,
+        createDeviceFixtures,
+        createDeviceIpMessageFixture,
+        createSecretAuthDeviceFixtures,
+        createServiceUserFixtures,
+        createApiKeyFixtures,
+        createAppFixtures,
+        createAuthCodeFixtures
+    ];
 
-    var modelTypes = Object.keys(models).map(function(key) { return models[key]; });
+    if (core.config.blob_provider) {
+        fixtureFactories.push(createBlobFixture);
+    }
 
-    async.each(modelTypes, removeAll, function(err) {
-        if (err) throw err;
-
-        var fixtureFactories = [
-            createUserFixtures,
-            createDeviceFixtures,
-            createDeviceIpMessageFixture,
-            createSecretAuthDeviceFixtures,
-            createServiceUserFixtures,
-            createApiKeyFixtures,
-            createAppFixtures,
-            createAuthCodeFixtures
-        ];
-
-        if (config.blob_provider) {
-            fixtureFactories.push(createBlobFixture);
-        }
-
-        async.series(fixtureFactories, callback);
-    });
+    async.series(fixtureFactories, callback);
 };
 
 var fixtures = {
