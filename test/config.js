@@ -149,7 +149,7 @@ config.pubsub_provider = new localProviders.MemoryPubSubProvider(config, log);
 console.log('email_provider: using null provider.');
 config.email_provider = new localProviders.NullEmailProvider(config, log);
 
-// Migration configuration
+// Test fixture location configuration
 config.blob_fixture_path = 'test/fixtures/images/image.jpg';
 
 module.exports = config;
