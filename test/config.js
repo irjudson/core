@@ -116,6 +116,10 @@ config.janitor_interval = 60 * 1000; // ms
 // Validate all message schemas to conform to all core and installed schemas.
 config.validate_schemas = true;
 
+// Migration configuration
+config.migrations_file_path = "./migrations/";
+config.migrations_require_path ="../../migrations/";
+
 // Email address that the service should use for administrative emails.
 config.service_email_address = "admin@nitrogen.io";
 
@@ -144,5 +148,8 @@ config.pubsub_provider = new localProviders.MemoryPubSubProvider(config, log);
 
 console.log('email_provider: using null provider.');
 config.email_provider = new localProviders.NullEmailProvider(config, log);
+
+// Migration configuration
+config.blob_fixture_path = 'test/fixtures/images/image.jpg';
 
 module.exports = config;
