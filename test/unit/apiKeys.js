@@ -1,11 +1,10 @@
 var assert = require('assert')
-  , core = require('../../lib')
-  , fixtures = require('../fixtures');
+  , core = require('../../lib');
 
 describe('apiKeys service', function() {
     it('can create, check, and remove apiKeys', function(done) {
         var apiKey = new core.models.ApiKey({
-            owner: fixtures.models.principals.anotherUser,
+            owner: core.fixtures.models.principals.anotherUser,
             name: 'my app',
             type: 'app',
             redirect_uri: "http://localhost:9000/"

@@ -1,6 +1,5 @@
 var assert = require('assert')
   , core = require('../../lib')
-  , fixtures = require('../fixtures')
   , fs = require('fs')
   , moment = require('moment')
   , mongoose = require('mongoose');
@@ -10,12 +9,12 @@ describe('messages service', function() {
     it('can create and removeOne a message', function(done) {
 
         var message = new core.models.Message({
-            from: fixtures.models.principals.device.id,
+            from: core.fixtures.models.principals.device.id,
             type: "_test",
             body: { reading: 5.1 }
         });
 
-        core.services.messages.create(fixtures.models.principals.user, message, function(err, savedMessages) {
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
           assert.ifError(err);
           assert.notEqual(savedMessages[0].id, null);
           assert.equal(savedMessages[0].body_length > 0, true);
@@ -35,10 +34,10 @@ describe('messages service', function() {
     });
 
     it('can remove messages with a query', function(done) {
-        var message = new core.models.Message({ from: fixtures.models.principals.device.id,
+        var message = new core.models.Message({ from: core.fixtures.models.principals.device.id,
             type: "_test" });
 
-        core.services.messages.create(fixtures.models.principals.user, message, function(err, savedMessages) {
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
             assert.ifError(err);
             assert.notEqual(savedMessages[0].id, null);
 
@@ -58,16 +57,16 @@ describe('messages service', function() {
         var message = new core.models.Message({ from: new mongoose.Types.ObjectId(),
                                            type: "_test" });
 
-        core.services.messages.create(fixtures.models.principals.user, message, function(err, savedMessages) {
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
             assert.notEqual(err, null);
             done();
         });
     });
 
     it ('rejects message without type', function(done) {
-        var message = new core.models.Message({ from: fixtures.models.principals.device.id });
+        var message = new core.models.Message({ from: core.fixtures.models.principals.device.id });
 
-        core.services.messages.create(fixtures.models.principals.user, message, function(err, savedMessages) {
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
             assert.notEqual(err, null);
             done();
         });
@@ -75,7 +74,7 @@ describe('messages service', function() {
 
     it ('handles log message by creating log entry', function(done) {
         var message = new core.models.Message({
-            from: fixtures.models.principals.device.id,
+            from: core.fixtures.models.principals.device.id,
             type: "log",
             body: {
                 severity: "error",
@@ -83,7 +82,7 @@ describe('messages service', function() {
             }
         });
 
-        core.services.messages.create(fixtures.models.principals.user, message, function(err, savedMessages) {
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
             assert.equal(err, null);
             done();
         });
@@ -91,7 +90,7 @@ describe('messages service', function() {
 
     it ('flunks incorrect schema for log message', function(done) {
         var message = new core.models.Message({
-            from: fixtures.models.principals.device.id,
+            from: core.fixtures.models.principals.device.id,
             type: "log",
             body: {
                 notright: "error",
@@ -99,7 +98,7 @@ describe('messages service', function() {
             }
         });
 
-        core.services.messages.create(fixtures.models.principals.user, message, function(err, savedMessages) {
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
             assert.notEqual(err, null);
             done();
         });
@@ -110,19 +109,19 @@ describe('messages service', function() {
             type: "unknownCommand"
         });
 
-        core.services.messages.create(fixtures.models.principals.user, message, function(err, savedMessages) {
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
             assert.notEqual(err, null);
             done();
         });
     });
 
     it('does queries with string object ids correctly', function(done) {
-        var deviceIdString = fixtures.models.principals.device.id.toString();
-        core.services.messages.find(fixtures.models.principals.device, { from: deviceIdString }, {}, function(err, messages) {
+        var deviceIdString = core.fixtures.models.principals.device.id.toString();
+        core.services.messages.find(core.fixtures.models.principals.device, { from: deviceIdString }, {}, function(err, messages) {
             assert.ifError(err);
             messages.forEach(function(message) {
-               assert.equal(message.to && message.to.toString() === fixtures.models.principals.device.id ||
-                            message.from && message.from.toString() === fixtures.models.principals.device.id, true);
+               assert.equal(message.to && message.to.toString() === core.fixtures.models.principals.device.id ||
+                            message.from && message.from.toString() === core.fixtures.models.principals.device.id, true);
             });
             done();
         });
@@ -143,13 +142,13 @@ describe('messages service', function() {
                 content_length: stats.size
             });
 
-            core.services.blobs.create(fixtures.models.principals.device, blob, stream, function(err, blob) {
+            core.services.blobs.create(core.fixtures.models.principals.device, blob, stream, function(err, blob) {
                 assert.ifError(err);
 
                 var oneMinuteFromNow = moment().add('minutes', 1).toDate();
 
                 var message = new core.models.Message({
-                    from: fixtures.models.principals.device.id,
+                    from: core.fixtures.models.principals.device.id,
                     index_until: oneMinuteFromNow,
                     type: 'image',
                     link: blob.link,
@@ -158,7 +157,7 @@ describe('messages service', function() {
                     }
                 });
 
-                core.services.messages.create(fixtures.models.principals.device, message, function(err, messages) {
+                core.services.messages.create(core.fixtures.models.principals.device, message, function(err, messages) {
                     assert.ifError(err);
                     assert.equal(messages.length, 1);
 
@@ -167,7 +166,7 @@ describe('messages service', function() {
                         assert.ifError(err);
                         assert.notEqual(removed, 0);
 
-                        core.services.messages.findById(fixtures.models.principals.device, messages[0].id, function(err, message) {
+                        core.services.messages.findById(core.fixtures.models.principals.device, messages[0].id, function(err, message) {
                             assert.ifError(err);
                             assert.equal(!message, true);
 
@@ -199,11 +198,11 @@ describe('messages service', function() {
                 content_length: stats.size
             });
 
-            core.services.blobs.create(fixtures.models.principals.device, blob, stream, function(err, blob) {
+            core.services.blobs.create(core.fixtures.models.principals.device, blob, stream, function(err, blob) {
                 assert.ifError(err);
 
                 var message = new core.models.Message({
-                    from: fixtures.models.principals.device.id,
+                    from: core.fixtures.models.principals.device.id,
                     index_until: core.models.Message.INDEX_FOREVER,
                     type: 'image',
                     link: blob.link,
@@ -212,7 +211,7 @@ describe('messages service', function() {
                     }
                 });
 
-                core.services.messages.create(fixtures.models.principals.device, message, function(err, messages) {
+                core.services.messages.create(core.fixtures.models.principals.device, message, function(err, messages) {
                     assert.ifError(err);
                     assert.equal(messages.length, 1);
 

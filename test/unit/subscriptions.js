@@ -1,12 +1,11 @@
 var assert = require('assert')
   , core = require('../../lib')
-  , fixtures = require('../fixtures')
   , lib = require('../../lib')
   , moment = require('moment');
 
 describe('subscriptions service', function() {
     it('creating a subscription should create row', function(done) {
-        core.services.subscriptions.findByPrincipalCached(fixtures.models.principals.device, fixtures.models.principals.device.id, {}, function(err, subscriptions) {
+        core.services.subscriptions.findByPrincipalCached(core.fixtures.models.principals.device, core.fixtures.models.principals.device.id, {}, function(err, subscriptions) {
             assert(!err);
 
             var cachedCount = subscriptions.length;
@@ -17,7 +16,7 @@ describe('subscriptions service', function() {
                 var subscription = new core.models.Subscription({
                     filter: {},
                     name: 'named',
-                    principal: fixtures.models.principals.device.id,
+                    principal: core.fixtures.models.principals.device.id,
                     type: 'message',
                     permanent: false,
                     name: core.utils.uuid()
@@ -26,7 +25,7 @@ describe('subscriptions service', function() {
                 core.services.subscriptions.findOrCreate(subscription, function(err, subscription) {
                     assert(!err);
 
-                    core.config.cache_provider.get('subscriptions', "subscriptions.principal." + fixtures.models.principals.device.id.toString(), function(err, subscriptionObjs) {
+                    core.config.cache_provider.get('subscriptions', "subscriptions.principal." + core.fixtures.models.principals.device.id.toString(), function(err, subscriptionObjs) {
                         assert(!err);
                         assert(!subscriptionObjs);
                     });
@@ -36,12 +35,12 @@ describe('subscriptions service', function() {
 
                         assert.equal(startingCount + 1, endingCount);
 
-                        core.services.subscriptions.findByPrincipalCached(fixtures.models.principals.device, fixtures.models.principals.device.id, {}, function(err, subscriptions) {
+                        core.services.subscriptions.findByPrincipalCached(core.fixtures.models.principals.device, core.fixtures.models.principals.device.id, {}, function(err, subscriptions) {
                             assert(!err);
 
                             assert.equal(cachedCount + 1, subscriptions.length);
 
-                            core.config.cache_provider.get('subscriptions', "subscriptions.principal." + fixtures.models.principals.device.id.toString(), function(err, subscriptionObjs) {
+                            core.config.cache_provider.get('subscriptions', "subscriptions.principal." + core.fixtures.models.principals.device.id.toString(), function(err, subscriptionObjs) {
                                 assert(!err);
                                 assert(subscriptionObjs.length);
 
@@ -49,11 +48,11 @@ describe('subscriptions service', function() {
                                 core.services.subscriptions.remove(subscription, function(err) {
                                     assert(!err);
 
-                                    core.config.cache_provider.get('subscriptions', "subscriptions.principal." + fixtures.models.principals.device.id.toString(), function(err, subscriptionObjs) {
+                                    core.config.cache_provider.get('subscriptions', "subscriptions.principal." + core.fixtures.models.principals.device.id.toString(), function(err, subscriptionObjs) {
                                         assert(!err);
                                         assert(!subscriptionObjs);
 
-                                        core.services.subscriptions.findByPrincipalCached(fixtures.models.principals.device, fixtures.models.principals.device.id, {}, function(err, subscriptions) {
+                                        core.services.subscriptions.findByPrincipalCached(core.fixtures.models.principals.device, core.fixtures.models.principals.device.id, {}, function(err, subscriptions) {
                                             assert(!err);
                                             assert.equal(cachedCount, subscriptions.length);
 

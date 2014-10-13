@@ -1,6 +1,5 @@
 var assert = require('assert')
-  , core = require('../../lib')
-  , fixtures = require('../fixtures');
+  , core = require('../../lib');
 
 describe('permissions service', function() {
     it('checks default permissions', function(done) {
@@ -16,7 +15,7 @@ describe('permissions service', function() {
             assert.equal(permission.authorized, true);
 
             core.services.permissions.authorize({
-                principal: fixtures.models.principals.user.id,
+                principal: core.fixtures.models.principals.user.id,
                 action: 'send'
             }, message, function(err, permission) {
                 assert.ifError(err);
@@ -26,15 +25,15 @@ describe('permissions service', function() {
                 message.body.url = 'http://to.no.where/';
 
                 core.services.permissions.authorize({
-                    principal: fixtures.models.principals.user.id,
+                    principal: core.fixtures.models.principals.user.id,
                     action: 'send'
                 }, message, function(err, permission) {
                     assert.ifError(err);
                     assert.equal(permission.authorized, true);
 
-                    message.to = fixtures.models.principals.device.id;
+                    message.to = core.fixtures.models.principals.device.id;
                     core.services.permissions.authorize({
-                        principal: fixtures.models.principals.user.id,
+                        principal: core.fixtures.models.principals.user.id,
                         action: 'send'
                     }, message, function(err, permission) {
                         assert.ifError(err);
@@ -47,45 +46,45 @@ describe('permissions service', function() {
     });
 
     it('creating a permission updates visible_to and clears caches', function(done) {
-        core.services.principals.findById(core.services.principals.servicePrincipal, fixtures.models.principals.anotherUser.id, function(err, anotherUser) {
+        core.services.principals.findById(core.services.principals.servicePrincipal, core.fixtures.models.principals.anotherUser.id, function(err, anotherUser) {
             assert(!err);
 
             core.services.permissions.create(core.services.principals.servicePrincipal,
                 new core.models.Permission({
                     authorized: true,
-                    issued_to: fixtures.models.principals.user.id,
-                    principal_for: fixtures.models.principals.anotherUser.id,
+                    issued_to: core.fixtures.models.principals.user.id,
+                    principal_for: core.fixtures.models.principals.anotherUser.id,
                     priority: 50000000
                 }),
                 function(err, permission) {
                     assert(!err);
 
-                    core.config.cache_provider.get('permissions', fixtures.models.principals.user.id, function(err, permissionObjs) {
+                    core.config.cache_provider.get('permissions', core.fixtures.models.principals.user.id, function(err, permissionObjs) {
                         assert(!err);
                         assert(!permissionObjs);
                     });
 
-                    core.config.cache_provider.get('permissions', fixtures.models.principals.anotherUser.id, function(err, permissionObjs) {
+                    core.config.cache_provider.get('permissions', core.fixtures.models.principals.anotherUser.id, function(err, permissionObjs) {
                         assert(!err);
                         assert(!permissionObjs);
                     });
 
-                    core.services.principals.findById(core.services.principals.servicePrincipal, fixtures.models.principals.anotherUser.id, function(err, anotherUser) {
+                    core.services.principals.findById(core.services.principals.servicePrincipal, core.fixtures.models.principals.anotherUser.id, function(err, anotherUser) {
                         assert(!err);
 
                         var foundUser = false;
                         anotherUser.visible_to.forEach(function(visiblePrincipalId) {
-                            if (visiblePrincipalId.toString() === fixtures.models.principals.user.id)
+                            if (visiblePrincipalId.toString() === core.fixtures.models.principals.user.id)
                                 foundUser = true;
                         });
 
                         assert(foundUser);
 
-                        core.services.permissions.permissionsForCached(fixtures.models.principals.user.id, function(err, permissions) {
+                        core.services.permissions.permissionsForCached(core.fixtures.models.principals.user.id, function(err, permissions) {
                             assert(!err);
                             assert(permissions.length);
 
-                            core.config.cache_provider.get('permissions', fixtures.models.principals.user.id, function(err, permissionObjs) {
+                            core.config.cache_provider.get('permissions', core.fixtures.models.principals.user.id, function(err, permissionObjs) {
                                 assert(!err);
                                 assert(permissionObjs.length);
 
@@ -101,11 +100,11 @@ describe('permissions service', function() {
                         core.services.permissions.removeById(core.services.principals.servicePrincipal, permission.id, function(err) {
                             assert(!err);
 
-                            core.config.cache_provider.get('permissions', fixtures.models.principals.user.id, function(err, permissionObjs) {
+                            core.config.cache_provider.get('permissions', core.fixtures.models.principals.user.id, function(err, permissionObjs) {
                                 assert(!err);
                                 assert(!permissionObjs);
 
-                                core.services.permissions.permissionsForCached(fixtures.models.principals.user.id, function(err, permissions) {
+                                core.services.permissions.permissionsForCached(core.fixtures.models.principals.user.id, function(err, permissions) {
                                     assert(!err);
                                     assert(permissions.length);
 

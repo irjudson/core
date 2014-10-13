@@ -1,7 +1,6 @@
 var assert = require('assert')
   , async = require('async')
   , config = require('./config')
-  , fixtures = require('./fixtures')
   , log = require('winston')
   , core = require('../lib')
   , mongoose = require('mongoose');
@@ -32,7 +31,7 @@ before(function(done) {
                     assert(!err);
                     log.debug('pubsub reset');
 
-                    fixtures.reset(function(err) {
+                    core.fixtures.reset(function(err) {
                         assert(!err);
                         log.debug('fixtures put in place');
 

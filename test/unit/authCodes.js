@@ -1,11 +1,10 @@
 var assert = require('assert')
-  , core = require('../../lib')
-  , fixtures = require('../fixtures');
+  , core = require('../../lib');
 
 describe('authCodes service', function() {
     it('can create, check, and remove authCodes', function(done) {
         var authCode = new core.models.AuthCode({
-            user: fixtures.models.principals.anotherUser.id,
+            user: core.fixtures.models.principals.anotherUser.id,
             redirect_uri: "http://localhost:9000/"
         });
 
@@ -17,13 +16,13 @@ describe('authCodes service', function() {
 
             assert(authCode.id);
 
-            core.services.authCodes.check(authCode.code, fixtures.models.principals.anotherUser, function(err, checkAuthCode) {
+            core.services.authCodes.check(authCode.code, core.fixtures.models.principals.anotherUser, function(err, checkAuthCode) {
                 assert(!err);
 
                 assert(checkAuthCode);
                 assert(checkAuthCode.id === authCode.id);
 
-                core.services.authCodes.check(authCode.code, fixtures.models.principals.user, function(err, checkAuthCode) {
+                core.services.authCodes.check(authCode.code, core.fixtures.models.principals.user, function(err, checkAuthCode) {
                     assert(err);
                     assert(!checkAuthCode);
 

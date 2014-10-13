@@ -1,10 +1,9 @@
 var assert = require('assert')
-  , core = require('../../lib')
-  , fixtures = require('../fixtures');
+  , core = require('../../lib');
 
 describe('accessToken service', function() {
     it('can create and remove tokens', function(done) {
-        core.services.accessTokens.create(fixtures.models.principals.anotherUser, function(err, accessToken) {
+        core.services.accessTokens.create(core.fixtures.models.principals.anotherUser, function(err, accessToken) {
             assert(!err);
 
             core.services.accessTokens.findByTokenCached(accessToken.token, function(err, accessToken) {

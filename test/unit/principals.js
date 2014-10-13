@@ -1,7 +1,6 @@
 var assert = require('assert')
   , core = require('../../lib')
-  , crypto = require('crypto')
-  , fixtures = require('../fixtures');
+  , crypto = require('crypto');
 
 describe('principals service', function() {
     var passwordFixture = "sEcReT44";
@@ -49,7 +48,7 @@ describe('principals service', function() {
         var app = new core.models.Principal({
             type: "app",
             nickname: 'app',
-            api_key: fixtures.models.apiKeys.user
+            api_key: core.fixtures.models.apiKeys.user
         });
 
         core.services.principals.createSecret(app, function(err, app) {
@@ -67,7 +66,7 @@ describe('principals service', function() {
     it('can create and validate a device', function(done) {
         var device = new core.models.Principal({
             type: "device",
-            api_key: fixtures.models.apiKeys.user,
+            api_key: core.fixtures.models.apiKeys.user,
         });
 
         core.services.principals.createSecret(device, function(err, device) {
@@ -96,8 +95,8 @@ describe('principals service', function() {
     });
 
     it('service can update name', function(done) {
-        fixtures.models.principals.device.name = 'my camera';
-        core.services.principals.update(core.services.principals.servicePrincipal, fixtures.models.principals.device.id, { name: "my camera"}, function(err, principal) {
+        core.fixtures.models.principals.device.name = 'my camera';
+        core.services.principals.update(core.services.principals.servicePrincipal, core.fixtures.models.principals.device.id, { name: "my camera"}, function(err, principal) {
             assert.ifError(err);
             assert.equal(principal.name, 'my camera');
 
@@ -106,12 +105,12 @@ describe('principals service', function() {
     });
 
     it('service can update visible_to', function(done) {
-        fixtures.models.principals.device.name = 'my camera';
+        core.fixtures.models.principals.device.name = 'my camera';
 
-        fixtures.models.principals.device.visible_to.push("52747742e2948d8e7f000001");
+        core.fixtures.models.principals.device.visible_to.push("52747742e2948d8e7f000001");
 
-        core.services.principals.update(core.services.principals.servicePrincipal, fixtures.models.principals.device.id,
-            { visible_to: fixtures.models.principals.device.visible_to }, function(err, updatedPrincipal) {
+        core.services.principals.update(core.services.principals.servicePrincipal, core.fixtures.models.principals.device.id,
+            { visible_to: core.fixtures.models.principals.device.visible_to }, function(err, updatedPrincipal) {
             assert.ifError(err);
 
             var foundPrincipal = false;
@@ -126,7 +125,7 @@ describe('principals service', function() {
     });
 
     it("a user principal can update a principal's name", function(done) {
-        core.services.principals.update(fixtures.models.principals.user, fixtures.models.principals.user.id, { name: "Joe User" }, function(err, principal) {
+        core.services.principals.update(core.fixtures.models.principals.user, core.fixtures.models.principals.user.id, { name: "Joe User" }, function(err, principal) {
             assert.ifError(err);
             assert.equal(principal.name, "Joe User");
             done();
@@ -136,7 +135,7 @@ describe('principals service', function() {
     it('should reject creating a user without an email', function(done) {
         var user = new core.models.Principal({
             type: 'user',
-            password: fixtures.models.principals.user.password
+            password: core.fixtures.models.principals.user.password
         });
 
         core.services.principals.create(user, function(err, user) {
@@ -158,14 +157,14 @@ describe('principals service', function() {
     });
 
     it('should reject user deleting the service principal', function(done) {
-        core.services.principals.removeById(fixtures.models.principals.user, core.services.principals.servicePrincipal.id, function(err) {
+        core.services.principals.removeById(core.fixtures.models.principals.user, core.services.principals.servicePrincipal.id, function(err) {
             assert.equal(!!err, true);
             done();
         });
     });
 
     it('should allow device deleting itself', function(done) {
-        core.services.principals.removeById(fixtures.models.principals.device, fixtures.models.principals.device.id, function(err) {
+        core.services.principals.removeById(core.fixtures.models.principals.device, core.fixtures.models.principals.device.id, function(err) {
             assert.ifError(err);
             done();
         });
@@ -174,8 +173,8 @@ describe('principals service', function() {
     it('should reject creating a if user that already exists', function(done) {
         var user = new core.models.Principal({
             type: 'user',
-            email: fixtures.models.principals.user.email,
-            password: fixtures.models.principals.user.password
+            email: core.fixtures.models.principals.user.email,
+            password: core.fixtures.models.principals.user.password
         });
 
         core.services.principals.create(user, function(err, user) {
