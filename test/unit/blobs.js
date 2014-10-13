@@ -1,7 +1,6 @@
 var assert = require('assert')
   , core = require('../../lib');
 
-
     describe('blob service', function() {
         if (core.config.blob_provider) {
             it('can remove a blob', function(done) {
