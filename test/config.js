@@ -117,8 +117,7 @@ config.janitor_interval = 60 * 1000; // ms
 config.validate_schemas = true;
 
 // Migration configuration
-config.migrations_file_path = "./migrations/";
-config.migrations_require_path ="../../migrations/";
+config.migrations_relative_path = "/migrations/";
 
 // Email address that the service should use for administrative emails.
 config.service_email_address = "admin@nitrogen.io";
