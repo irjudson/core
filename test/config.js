@@ -127,9 +127,11 @@ config.service_applications = [
     { instance_id: 'matcher', module: 'nitrogen-matcher' }
 ];
 
-config.redis_server = {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379
+config.redis_servers = {
+    "redis": {
+        host: "localhost",
+        port: 6379
+    }
 };
 
 console.log('archive_provider: using local storage.');
