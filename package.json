@@ -18,17 +18,18 @@
     "node": "0.10.24"
   },
   "dependencies": {
-    "async": "~0.2.10",
-    "jsonwebtoken": "~1.1.2",
-    "moment": "~2.7.0",
+    "async": "^0.2.10",
+    "jsonwebtoken": "^1.1.2",
+    "moment": "^2.7.0",
     "mongodb": "~1.4.19",
     "mongoose": "~3.8.17",
-    "revalidator": "~0.1.8",
+    "redis": "^0.10.3",
+    "request": "^2.51.0",
+    "revalidator": "^0.1.8",
     "sift": "0.0.18",
-    "socket.io": "~0.9.17",
+    "socket.io": "^0.9.17",
     "streamifier": "~0.1.0",
-    "winston": "~0.7.3",
-    "redis": "~0.10.3"
+    "winston": "^0.7.3"
   },
   "devDependencies": {
     "mocha": "~1.20.1",
