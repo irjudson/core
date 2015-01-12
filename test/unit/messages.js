@@ -15,7 +15,7 @@ describe('messages service', function() {
         });
 
         core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
-          assert.ifError(err);
+          assert(!err);
           assert.notEqual(savedMessages[0].id, null);
           assert.equal(savedMessages[0].body_length > 0, true);
 
@@ -34,18 +34,20 @@ describe('messages service', function() {
     });
 
     it('can remove messages with a query', function(done) {
-        var message = new core.models.Message({ from: core.fixtures.models.principals.device.id,
-            type: "_test" });
+        var message = new core.models.Message({
+            from: core.fixtures.models.principals.device.id,
+            type: "_test"
+        });
 
         core.services.messages.create(core.fixtures.models.principals.user, message, function(err, savedMessages) {
-            assert.ifError(err);
+            assert(!err);
             assert.notEqual(savedMessages[0].id, null);
 
             core.services.messages.remove(core.services.principals.servicePrincipal, { type: "_test" }, function(err) {
-                assert.equal(err, null);
+                assert(!err);
 
                 core.services.messages.find(core.services.principals.servicePrincipal, { type: "_test" }, function(err, messages) {
-                    assert.equal(err, null);
+                    assert(!err);
                     assert.equal(messages.length, 0);
                     done();
                 });
@@ -118,11 +120,32 @@ describe('messages service', function() {
     it('does queries with string object ids correctly', function(done) {
         var deviceIdString = core.fixtures.models.principals.device.id.toString();
         core.services.messages.find(core.fixtures.models.principals.device, { from: deviceIdString }, {}, function(err, messages) {
-            assert.ifError(err);
+            assert(!err);
             messages.forEach(function(message) {
                assert.equal(message.to && message.to.toString() === core.fixtures.models.principals.device.id ||
                             message.from && message.from.toString() === core.fixtures.models.principals.device.id, true);
             });
+            done();
+        });
+    });
+
+    it('fans out group messages to members', function(done) {
+       var message = new core.models.Message({
+            from: core.fixtures.models.principals.user.id,
+            to: core.fixtures.models.principals.group.id,
+            type: "_fanoutTest",
+            body: {
+                data: 1
+            }
+        });
+
+        core.services.messages.create(core.fixtures.models.principals.user, message, function(err, messages) {
+            assert(!err);
+
+            assert.equal(messages.length, 2);
+            assert.equal(messages[0].to, core.fixtures.models.principals.device.id);
+            assert.equal(messages[1].to, core.fixtures.models.principals.user.id);
+
             done();
         });
     });
@@ -133,7 +156,7 @@ describe('messages service', function() {
         var fixturePath = 'test/fixtures/images/image.jpg';
 
         fs.stat(fixturePath, function(err, stats) {
-            assert.ifError(err);
+            assert(!err);
 
             var stream = fs.createReadStream(fixturePath);
 
@@ -143,7 +166,7 @@ describe('messages service', function() {
             });
 
             core.services.blobs.create(core.fixtures.models.principals.device, blob, stream, function(err, blob) {
-                assert.ifError(err);
+                assert(!err);
 
                 var oneMinuteFromNow = moment().add('minutes', 1).toDate();
 
@@ -158,20 +181,20 @@ describe('messages service', function() {
                 });
 
                 core.services.messages.create(core.fixtures.models.principals.device, message, function(err, messages) {
-                    assert.ifError(err);
+                    assert(!err);
                     assert.equal(messages.length, 1);
 
                     // We now have a message with a linked blob.  Running remove with the current time should remove them both.
                     core.services.messages.remove(core.services.principals.servicePrincipal, { index_until: oneMinuteFromNow }, function(err, removed) {
-                        assert.ifError(err);
+                        assert(!err);
                         assert.notEqual(removed, 0);
 
                         core.services.messages.findById(core.fixtures.models.principals.device, messages[0].id, function(err, message) {
-                            assert.ifError(err);
+                            assert(!err);
                             assert.equal(!message, true);
 
                             core.services.blobs.findById(blob.id, function(err, blob) {
-                                assert.ifError(err);
+                                assert(!err);
                                 assert.equal(!blob, true);
 
                                 done();
@@ -189,7 +212,7 @@ describe('messages service', function() {
         var fixturePath = 'test/fixtures/images/image.jpg';
 
         fs.stat(fixturePath, function(err, stats) {
-            assert.ifError(err);
+            assert(!err);
 
             var stream = fs.createReadStream(fixturePath);
 
@@ -199,7 +222,7 @@ describe('messages service', function() {
             });
 
             core.services.blobs.create(core.fixtures.models.principals.device, blob, stream, function(err, blob) {
-                assert.ifError(err);
+                assert(!err);
 
                 var message = new core.models.Message({
                     from: core.fixtures.models.principals.device.id,
@@ -212,20 +235,20 @@ describe('messages service', function() {
                 });
 
                 core.services.messages.create(core.fixtures.models.principals.device, message, function(err, messages) {
-                    assert.ifError(err);
+                    assert(!err);
                     assert.equal(messages.length, 1);
 
                     // We now have a message with a linked blob.  Running remove with the current time should remove them both.
                     core.services.messages.remove(core.services.principals.servicePrincipal, { index_until: { $lt: new Date() } }, function(err, removed) {
-                        assert.ifError(err);
+                        assert(!err);
                         assert.equal(removed, 0);
 
                         core.services.messages.findById(core.services.principals.servicePrincipal, messages[0]._id, function(err, message) {
-                            assert.ifError(err);
+                            assert(!err);
                             assert.equal(!message, false);
 
                             core.services.blobs.findById(blob.id, function(err, blob) {
-                                assert.ifError(err);
+                                assert(!err);
                                 assert.equal(!blob, false);
 
                                 done();
