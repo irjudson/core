@@ -240,7 +240,7 @@ describe('subscriptions service', function() {
             permanent: true,
             principal: core.services.principals.servicePrincipal,
             type: "message",
-            last_receive: moment().add('days', -5).toDate()
+            last_receive: moment().add(-5, 'days').toDate()
         });
 
         core.services.subscriptions.findOrCreate(permSub, function(err, permSub) {
@@ -253,7 +253,7 @@ describe('subscriptions service', function() {
                 type: "message",
                 permanent: false,
                 name: core.utils.uuid(),
-                last_receive: moment().add('days', -5).toDate()
+                last_receive: moment().add(-5, 'days').toDate()
             });
 
             core.services.subscriptions.findOrCreate(sessionSub, function(err, sessionSub) {
