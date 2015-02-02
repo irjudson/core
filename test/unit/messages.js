@@ -33,6 +33,28 @@ describe('messages service', function() {
         });
     });
 
+    it('can add multiple messages', function(done) {
+        var messages = [
+            new core.models.Message({
+                from: core.fixtures.models.principals.device.id,
+                type: "_test",
+                body: { reading: 5.1 }
+            }),
+            new core.models.Message({
+                from: core.fixtures.models.principals.device.id,
+                type: "_test",
+                body: { reading: 5.1 }
+            })
+        ];
+
+        core.services.messages.createMany(core.fixtures.models.principals.user, messages, function(err, savedMessages) {
+            assert(!err);
+
+            assert.equal(savedMessages.length, 2);
+            done();
+        });
+    });
+
     it('can remove messages with a query', function(done) {
         var message = new core.models.Message({
             from: core.fixtures.models.principals.device.id,
