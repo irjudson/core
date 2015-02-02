@@ -1,4 +1,5 @@
 var assert = require('assert')
+  , moment = require('moment')
   , core = require('../../lib');
 
 describe('accessToken service', function() {
@@ -27,5 +28,23 @@ describe('accessToken service', function() {
                 });
             });
         });
+    });
+    it('can create a token with the correct default expiration (1 day)', function(done) {
+        core.services.accessTokens.create(core.fixtures.models.principals.anotherUser, function(err, accessToken) {
+            assert(!err);
+            var expires = moment(accessToken.expiration);
+            var oneDayFromNow = moment().add(1, 'days');
+            assert((oneDayFromNow - expires) == (60 * 60 * 24 * 1000));
+            done();
+        });    
+    });
+    it('can create a token with a custom expiration', function(done) {
+        core.services.accessTokens.create(core.fixtures.models.principals.anotherUser, { expires: moment().add(30, 'days') }, function(err, accessToken) {
+            assert(!err);
+            var expires = moment(accessToken.expiration);
+            var thirtyDaysFromNow = moment().add(30, 'days');
+            assert((thirtyDaysFromNow - expires) == (30 * 60 * 60 * 24 * 1000));
+            done();
+        });    
     });
 });

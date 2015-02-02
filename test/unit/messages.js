@@ -168,7 +168,7 @@ describe('messages service', function() {
             core.services.blobs.create(core.fixtures.models.principals.device, blob, stream, function(err, blob) {
                 assert(!err);
 
-                var oneMinuteFromNow = moment().add('minutes', 1).toDate();
+                var oneMinuteFromNow = moment().add(1, 'minutes').toDate();
 
                 var message = new core.models.Message({
                     from: core.fixtures.models.principals.device.id,
