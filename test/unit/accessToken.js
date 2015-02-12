@@ -50,9 +50,8 @@ describe('accessToken service', function() {
     it('can create a token with a custom expiration', function(done) {
         core.services.accessTokens.create(core.fixtures.models.principals.anotherUser, { expires: moment().add(30, 'days') }, function(err, accessToken) {
             assert(!err);
-            var expires = moment(accessToken.expiration);
-            var thirtyDaysFromNow = moment().add(30, 'days');
-            assert((thirtyDaysFromNow - expires) == (30 * 60 * 60 * 24 * 1000));
+            var thirtyDaysFromNow = moment().add(30, 'days')
+            assert((moment(accessToken.expires_at) - thirtyDaysFromNow) < 1000);
             done();
         });
     });

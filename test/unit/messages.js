@@ -2,10 +2,41 @@ var assert = require('assert')
   , core = require('../../lib')
   , fs = require('fs')
   , moment = require('moment')
-  , mongoose = require('mongoose');
+  , mongoose = require('mongoose')
+  , flat = require('flat');
 
 describe('messages service', function() {
 
+    it('can flatten a message', function(done) {
+        var obj = {
+          ts: "Mon Feb 02 2015 14:59:48 GMT-0800 (PST)",
+          body: {
+            longitude: "-122.3331",
+            latitude: "48.2332"
+           },
+          from: "54cffafea09ef731a1c09682",
+          type: 'location',
+          index_until: "Mon Feb 09 2015 14:59:48 GMT-0800 (PST)",
+          expires: "Thu Dec 31 2499 16:00:00 GMT-0800 (PST)",
+          tags: ['involves:54cffafea09ef731a1c09682'],
+          response_to: [],
+          ver: 0.2,
+          updated_at: '2015-02-02T22:59:48.387Z',
+          created_at: '2015-02-02T22:59:48.387Z',
+          id: '54d00164509ef69fa13cb99d'
+        };
+        
+        var message = new core.models.Message(obj);
+        assert.equal(message.body.longitude, "-122.3331");
+        assert.equal("body.longitude" in message, false);
+      
+        var flatMsg = core.services.messages.flatten(message.toJSON());
+        assert.equal(flatMsg["body.longitude"], "-122.3331");
+        assert.equal("body" in flatMsg, false);
+        
+        done();
+    });
+    
     it('can create and removeOne a message', function(done) {
 
         var message = new core.models.Message({
