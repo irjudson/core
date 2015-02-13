@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "async": "^0.2.10",
+    "flat": "^1.5.0",
     "jsonwebtoken": "^1.1.2",
     "moment": "^2.7.0",
     "mongodb": "~1.4.19",
